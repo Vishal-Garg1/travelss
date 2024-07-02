@@ -8,7 +8,7 @@ const Place = require('./models/Place.js');
 const Booking = require('./models/Booking.js');
 const cookieParser = require('cookie-parser');
 const imageDownloader = require('image-downloader');
-
+const cloudinary = require('cloudinary').v2;
 const multer = require('multer');
 const fs = require('fs');
 const mime = require('mime-types');
@@ -37,6 +37,30 @@ function getUserDataFromReq(req) {
   });
 }
 
+cloudinary.config({ 
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME, 
+  api_key: process.env.CLOUDINARY_API_KEY, 
+  api_secret: process.env.CLOUDINARY_API_SECRET 
+});
+
+const uploadOnCloudinary = async (localFilePath) => {
+    try {
+        if (!localFilePath) return null
+        //upload the file on cloudinary
+        const response = await cloudinary.uploader.upload(localFilePath, {
+            resource_type: "auto"
+        })
+        // file has been uploaded successfull
+        //console.log("file is uploaded on cloudinary ", response.url);
+        //fs.unlinkSync(localFilePath)
+        return response;
+
+    } catch (error) {
+        //fs.unlinkSync(localFilePath) // remove the locally saved temporary file as the upload operation got failed
+        return null;
+    }
+}
+
 app.get('/api/test', (req,res) => {
   mongoose.connect(process.env.MONGO_URL);
   res.json('test ok');
@@ -62,7 +86,7 @@ app.post('/api/register', async (req,res) => {
 app.post('/api/login', async (req,res) => {
   mongoose.connect(process.env.MONGO_URL);
   const {email,password} = req.body;
-  const userDoc = await User.findOne({email});
+  const userDoc=await User.findOne({email});
   if (userDoc) {
     const passOk = bcrypt.compareSync(password, userDoc.password);
     if (passOk) {
@@ -77,7 +101,7 @@ app.post('/api/login', async (req,res) => {
       res.status(422).json('pass not ok');
     }
   } else {
-    res.json('not found');
+    res.status(422).json('not found');
   }
 });
 
@@ -107,17 +131,18 @@ app.post('/api/upload-by-link', async (req,res) => {
     url: link,
     dest: '/tmp/' +newName,
   });
-  const url = await uploadToS3('/tmp/' +newName, newName, mime.lookup('/tmp/' +newName));
-  res.json(url);
+  //const url = await uploadToS3('/tmp/' +newName, newName, mime.lookup('/tmp/' +newName));
+  const url = await uploadOnCloudinary('/tmp/' +newName);
+  res.json(url.url);
 });
 
 const photosMiddleware = multer({dest:'/tmp'});
 app.post('/api/upload', photosMiddleware.array('photos', 100), async (req,res) => {
   const uploadedFiles = [];
   for (let i = 0; i < req.files.length; i++) {
-    const {path,originalname,mimetype} = req.files[i];
-    const url = await uploadToS3(path, originalname, mimetype);
-    uploadedFiles.push(url);
+    const {path} = req.files[i];
+    const url = await uploadOnCloudinary(path);
+    uploadedFiles.push(url.secure_url);
   }
   res.json(uploadedFiles);
 });
