@@ -25,6 +25,7 @@ app.use(cookieParser());
 app.use('/uploads', express.static(__dirname+'/uploads'));
 app.use(cors({
   credentials: true,
+  
   origin: process.env.ORIGIN,
 }));
 
@@ -95,7 +96,10 @@ app.post('/api/login', async (req,res) => {
         id:userDoc._id
       }, jwtSecret, {}, (err,token) => {
         if (err) throw err;
-        res.cookie('token', token).json(userDoc);
+        res.cookie('token', token, {
+          sameSite: 'none',
+          secure: true,
+        }).json(userDoc);
       });
     } else {
       res.status(422).json('pass not ok');
