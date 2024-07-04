@@ -7,9 +7,14 @@ export default function PhotosUploader({addedPhotos,onChange}) {
   async function addPhotoByLink(ev) {
     ev.preventDefault();
     const {data:filename} = await axios.post('/upload-by-link', {link: photoLink});
-    onChange(prev => {
-      return [...prev, filename];
-    });
+    if(filename=='Error'){
+      alert("Can't find this image");
+    }
+    else{
+      onChange(prev => {
+        return [...prev, filename];
+      });
+    }
     setPhotoLink('');
   }
   function uploadPhoto(ev) {
