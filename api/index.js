@@ -124,7 +124,10 @@ app.get('/api/profile', (req,res) => {
 });
 
 app.post('/api/logout', (req,res) => {
-  res.cookie('token', '').json(true);
+  res.cookie('token', '',{
+    sameSite: 'none',
+    secure: true,
+  }).json(true);
 });
 
 
