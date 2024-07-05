@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 
-const bookingSchema = new mongoose.Schema({
+const bookingSchema = new mongoose.Schema(
+  {
   place: {type:mongoose.Schema.Types.ObjectId, required:true, ref:'Place'},
   user: {type:mongoose.Schema.Types.ObjectId, required:true},
   checkIn: {type:Date, required:true},
@@ -8,7 +9,13 @@ const bookingSchema = new mongoose.Schema({
   name: {type:String, required:true},
   phone: {type:String, required:true},
   price: Number,
-});
+  },
+  {
+    timestamps: true
+  }
+
+
+);
 
 const BookingModel = mongoose.model('Booking', bookingSchema);
 
