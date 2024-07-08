@@ -3,14 +3,24 @@ import axios from "axios";
 import {Link} from "react-router-dom";
 import Image from "../Image.jsx";
 
+
+
 export default function IndexPage() {
+  const [isLoading, setIsLoading] = useState(true);
   const [places,setPlaces] = useState([]);
   useEffect(() => {
     axios.get('/places').then(response => {
       setPlaces(response.data);
+      setIsLoading(false);
     });
+    
   }, []);
+
   return (
+    <div>
+    <div className="... flex justify-center font-bold text-red-500 mt-8 text-2xl" >
+        {isLoading ? <h1>Loading data..... Please wait</h1> : null}
+      </div>
     <div className="mt-8 grid gap-x-6 gap-y-8 grid-cols-2 md:grid-cols-3 lg:grid-cols-3">
       {places.length > 0 && places.map(place => (
         <Link to={'/place/'+place._id}>
@@ -26,6 +36,7 @@ export default function IndexPage() {
           </div>
         </Link>
       ))}
+    </div>
     </div>
   );
 }
